@@ -1,0 +1,1117 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRpair - نظام إدارة الصيانة والكاشير المبسط</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        cardHover: '#334155',
+                        accentGreen: '#10b981',
+                        accentBlue: '#3b82f6',
+                        accentAmber: '#f59e0b',
+                        accentPurple: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col justify-between selection:bg-accentBlue selection:text-white">
+
+    <!-- Top Navbar -->
+    <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-blue-600 to-emerald-500 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-screwdriver-wrench text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">IRpair</h1>
+                    <p class="text-xs text-slate-400">إدارة الصيانة والمبيعات بذكاء وبساطة</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap items-center gap-2 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-lg">
+                    <i class="fa-solid fa-chart-pie"></i> لوحة الإحصائيات
+                </button>
+                <button onclick="switchTab('repairs')" id="btn-repairs" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-laptop-code"></i> قسم الصيانة
+                </button>
+                <button onclick="switchTab('accessories')" id="btn-accessories" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-headphones"></i> مبيعات الإكسسوار
+                </button>
+                <button onclick="switchTab('useddevices')" id="btn-useddevices" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-mobile-screen-button"></i> الأجهزة المستعملة
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content fade-in space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Today Profit -->
+                <div class="bg-cardBg border border-slate-800 p-5 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -left-6 -bottom-6 text-emerald-500/10 text-8xl font-black pointer-events-none"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <div class="flex justify-between items-center text-slate-400 mb-2">
+                            <span class="text-sm font-semibold">أرباح اليوم الصافية</span>
+                            <span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-bold">يومي</span>
+                        </div>
+                        <h3 id="stat-daily-profit" class="text-3xl font-black text-emerald-400 tracking-tight">0 <span class="text-sm font-normal text-slate-400">ج.م</span></h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-800/60">الإيرادات ناقص تكلفة قطع الغيار</p>
+                </div>
+
+                <!-- Weekly Profit -->
+                <div class="bg-cardBg border border-slate-800 p-5 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -left-6 -bottom-6 text-blue-500/10 text-8xl font-black pointer-events-none"><i class="fa-solid fa-chart-line"></i></div>
+                    <div>
+                        <div class="flex justify-between items-center text-slate-400 mb-2">
+                            <span class="text-sm font-semibold">أرباح الأسبوع (آخر 7 أيام)</span>
+                            <span class="bg-blue-500/20 text-blue-400 text-xs px-2.5 py-1 rounded-full font-bold">أسبوعي</span>
+                        </div>
+                        <h3 id="stat-weekly-profit" class="text-3xl font-black text-blue-400 tracking-tight">0 <span class="text-sm font-normal text-slate-400">ج.م</span></h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-800/60">صافي ربح الصيانة والإكسسوارات والمستعمل</p>
+                </div>
+
+                <!-- Monthly Profit -->
+                <div class="bg-cardBg border border-slate-800 p-5 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -left-6 -bottom-6 text-purple-500/10 text-8xl font-black pointer-events-none"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div>
+                        <div class="flex justify-between items-center text-slate-400 mb-2">
+                            <span class="text-sm font-semibold">أرباح الشهر الحالي</span>
+                            <span class="bg-purple-500/20 text-purple-400 text-xs px-2.5 py-1 rounded-full font-bold">شهري</span>
+                        </div>
+                        <h3 id="stat-monthly-profit" class="text-3xl font-black text-purple-400 tracking-tight">0 <span class="text-sm font-normal text-slate-400">ج.م</span></h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-800/60">إجمالي الأرباح لهذا الشهر</p>
+                </div>
+
+                <!-- Active Repairs Count -->
+                <div class="bg-cardBg border border-slate-800 p-5 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -left-6 -bottom-6 text-amber-500/10 text-8xl font-black pointer-events-none"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <div class="flex justify-between items-center text-slate-400 mb-2">
+                            <span class="text-sm font-semibold">أجهزة تحت الصيانة</span>
+                            <span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">نشط</span>
+                        </div>
+                        <h3 id="stat-active-repairs" class="text-3xl font-black text-amber-400 tracking-tight">0 <span class="text-sm font-normal text-slate-400">جهاز</span></h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-800/60">تنتظر التسليم أو الإصلاح</p>
+                </div>
+            </div>
+
+            <!-- Quick Overview & Stats Charts / Recent List -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Recent Repairs Widget -->
+                <div class="bg-cardBg border border-slate-800 rounded-2xl p-5 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-blue-400"></i> أحدث عمليات الصيانة</h3>
+                        <button onclick="switchTab('repairs')" class="text-xs text-blue-400 hover:underline">عرض الكل</button>
+                    </div>
+                    <div id="dashboard-recent-repairs" class="space-y-3">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Store Quick Summary -->
+                <div class="bg-cardBg border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-base flex items-center gap-2 mb-4"><i class="fa-solid fa-store text-emerald-400"></i> نظرة سريعة على المخزون</h3>
+                        <div class="space-y-4">
+                            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-300">إجمالي قطع الإكسسوارات المسجلة</span>
+                                <span id="dash-acc-count" class="font-bold text-emerald-400 text-lg">0</span>
+                            </div>
+                            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-300">أجهزة مستعملة متاحة للبيع</span>
+                                <span id="dash-used-count" class="font-bold text-blue-400 text-lg">0</span>
+                            </div>
+                            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <span class="text-slate-300">إجمالي الإيرادات العامة للمتجر</span>
+                                <span id="dash-total-revenue" class="font-bold text-purple-400 text-lg">0 ج.م</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 text-center">
+                        نظام إدارة محترف ومخصص خصيصاً لورش ومحلات الصيانة الصغيرة.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: REPAIRS (الصيانة) -->
+        <section id="tab-repairs" class="tab-content hidden fade-in space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-cardBg p-5 rounded-2xl border border-slate-800 shadow-lg">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-white"><i class="fa-solid fa-laptop-code text-blue-500"></i> إدارة الصيانة والأعطال</h2>
+                    <p class="text-xs text-slate-400 mt-1">تسجيل الأجهزة المستلمة، قطع الغيار، تكلفة الإصلاح، وحساب الأرباح وإرسال الفاتورة للواتساب.</p>
+                </div>
+                <button onclick="openRepairModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus"></i> إضافة جهاز للصيانة
+                </button>
+            </div>
+
+            <!-- Search & Filter bar -->
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute right-3.5 top-3 text-slate-400"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="repair-search" oninput="renderRepairsTable()" placeholder="ابحث باسم العميل أو موديل الجهاز أو رقم الهاتف..." class="w-full bg-cardBg border border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <select id="repair-filter-status" onchange="renderRepairsTable()" class="bg-cardBg border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        <option value="all">كل الحالات</option>
+                        <option value="تحت الصيانة">تحت الصيانة</option>
+                        <option value="تم الإصلاح">تم الإصلاح</option>
+                        <option value="تم التسليم">تم التسليم</option>
+                        <option value="ملغي/لم يتم الإصلاح">ملغي / لم يتم الإصلاح</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Repairs Table/Cards -->
+            <div class="bg-cardBg border border-slate-800 rounded-2xl shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/80 border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                                <th class="p-4">العميل ورقم الهاتف</th>
+                                <th class="p-4">بيانات الجهاز والعطل</th>
+                                <th class="p-4">التواريخ (استلام/تسليم)</th>
+                                <th class="p-4">التكلفة والربح</th>
+                                <th class="p-4">الحالة</th>
+                                <th class="p-4 text-center">الإجراءات والواتساب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repairs-table-body" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="repairs-empty" class="hidden p-12 text-center text-slate-400">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-600"></i>
+                    <p>لا توجد سجلات صيانة مطابقة. اضغط على "إضافة جهاز للصيانة" للبدء.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ACCESSORIES (مبيعات الإكسسوار) -->
+        <section id="tab-accessories" class="tab-content hidden fade-in space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-cardBg p-5 rounded-2xl border border-slate-800 shadow-lg">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-white"><i class="fa-solid fa-headphones text-emerald-500"></i> مبيعات الإكسسوارات المخزنية</h2>
+                    <p class="text-xs text-slate-400 mt-1">إضافة وإدارة الإكسسوارات البسيطة (كابلات، شواحن،سماعات) مع خصم تلقائي من الكمية والربح.</p>
+                </div>
+                <button onclick="openAccessoryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus"></i> إضافة منتج إكسسوار جديد
+                </button>
+            </div>
+
+            <!-- Accessory search & Grid -->
+            <div class="relative w-full sm:w-80">
+                <span class="absolute right-3.5 top-3 text-slate-400"><i class="fa-solid fa-search"></i></span>
+                <input type="text" id="acc-search" oninput="renderAccessories()" placeholder="ابحث عن اسم الإكسسوار..." class="w-full bg-cardBg border border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="accessories-grid">
+                <!-- Filled by JS -->
+            </div>
+            <div id="accessories-empty" class="hidden bg-cardBg border border-slate-800 rounded-2xl p-12 text-center text-slate-400">
+                <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-600"></i>
+                <p>لا توجد إكسسوارات مسجلة بعد.</p>
+            </div>
+        </section>
+
+        <!-- TAB 4: USED DEVICES (الأجهزة المستعملة) -->
+        <section id="tab-useddevices" class="tab-content hidden fade-in space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-cardBg p-5 rounded-2xl border border-slate-800 shadow-lg">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-white"><i class="fa-solid fa-mobile-screen-button text-purple-500"></i> قسم الأجهزة المستعملة (شراء وبيع)</h2>
+                    <p class="text-xs text-slate-400 mt-1">تسجيل الأجهزة المشتراة وتتبع سعر الشراء وسعر البيع وحالة الجهاز والربح المحقق فور البيع.</p>
+                </div>
+                <button onclick="openUsedDeviceModal()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus"></i> تسجيل جهاز مستعمل
+                </button>
+            </div>
+
+            <div class="relative w-full sm:w-80">
+                <span class="absolute right-3.5 top-3 text-slate-400"><i class="fa-solid fa-search"></i></span>
+                <input type="text" id="used-search" oninput="renderUsedDevices()" placeholder="ابحث باسم الجهاز أو اسم العميل..." class="w-full bg-cardBg border border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:border-purple-500">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="used-grid">
+                <!-- Filled by JS -->
+            </div>
+            <div id="used-empty" class="hidden bg-cardBg border border-slate-800 rounded-2xl p-12 text-center text-slate-400">
+                <i class="fa-solid fa-mobile text-4xl mb-3 text-slate-600"></i>
+                <p>لا توجد أجهزة مستعملة مسجلة بعد.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer with Developer Branding -->
+    <footer class="bg-cardBg border-t border-slate-800 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>النظام يعمل محلياً بكفاءة وأمان تام (LocalStorage)</span>
+            </div>
+            <div class="font-bold text-slate-300 flex items-center gap-1">
+                <span>تطوير وإبرام المبرمج:</span>
+                <span class="text-blue-400 font-extrabold text-sm">Eng Hisham Eid</span>
+                <span class="mx-1 text-slate-600">|</span>
+                <a href="tel:01001220551" class="text-emerald-400 hover:underline flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-xs"></i> 01001220551
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: REPAIR ADD / EDIT -->
+    <div id="modal-repair" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl my-8 relative">
+            <h3 id="repair-modal-title" class="text-lg font-bold mb-4 flex items-center gap-2 text-white">
+                <i class="fa-solid fa-laptop-code text-blue-500"></i> إضافة جهاز جديد للصيانة
+            </h3>
+            <form id="form-repair" onsubmit="saveRepair(event)" class="space-y-4">
+                <input type="hidden" id="repair-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">اسم العميل *</label>
+                        <input type="text" id="repair-customer" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="مثال: محمد أحمد">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">رقم الهاتف *</label>
+                        <input type="text" id="repair-phone" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="مثال: 010xxxxxxxx">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">موديل الجهاز *</label>
+                        <input type="text" id="repair-model" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="مثال: iPhone 11 Pro">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">ملحقات مستلمة مع الجهاز</label>
+                        <input type="text" id="repair-accessories" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="مثال: جراب أسود + شاحن">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">تفاصيل العطل *</label>
+                    <textarea id="repair-fault" required rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="شاشة مكسورة / فاصل باور..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">تكلفة قطعة الغيار (ج.م)</label>
+                        <input type="number" id="repair-partcost" value="0" min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">السعر النهائي للزبون (ج.م) *</label>
+                        <input type="number" id="repair-price" required value="0" min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">المبلغ المقدم / العربون (ج.م)</label>
+                        <input type="number" id="repair-deposit" value="0" min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">تاريخ الاستلام *</label>
+                        <input type="date" id="repair-date-in" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">تاريخ التسليم المتوقع</label>
+                        <input type="date" id="repair-date-out" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">حالة الصيانة</label>
+                        <select id="repair-status" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="تحت الصيانة">تحت الصيانة</option>
+                            <option value="تم الإصلاح">تم الإصلاح</option>
+                            <option value="تم التسليم">تم التسليم</option>
+                            <option value="ملغي/لم يتم الإصلاح">ملغي / لم يتم الإصلاح</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeRepairModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition-all">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold shadow-lg transition-all">حفظ البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ACCESSORY ADD / EDIT -->
+    <div id="modal-accessory" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl my-8 relative">
+            <h3 id="acc-modal-title" class="text-lg font-bold mb-4 flex items-center gap-2 text-white">
+                <i class="fa-solid fa-headphones text-emerald-500"></i> إضافة إكسسوار جديد
+            </h3>
+            <form id="form-accessory" onsubmit="saveAccessory(event)" class="space-y-4">
+                <input type="hidden" id="acc-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">اسم المنتج *</label>
+                    <input type="text" id="acc-name" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="مثال: شاحن آيفون أصلي 20W">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">سعر الشراء (عليك) *</label>
+                        <input type="number" id="acc-cost" required min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">سعر البيع للزبون *</label>
+                        <input type="number" id="acc-price" required min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">الكمية المتاحة بالمخزن *</label>
+                    <input type="number" id="acc-qty" required min="1" value="1" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeAccessoryModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition-all">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold shadow-lg transition-all">حفظ المنتج</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: USED DEVICE ADD / EDIT -->
+    <div id="modal-used" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl my-8 relative">
+            <h3 id="used-modal-title" class="text-lg font-bold mb-4 flex items-center gap-2 text-white">
+                <i class="fa-solid fa-mobile-screen-button text-purple-500"></i> تسجيل جهاز مستعمل
+            </h3>
+            <form id="form-used" onsubmit="saveUsedDevice(event)" class="space-y-4">
+                <input type="hidden" id="used-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">موديل الجهاز *</label>
+                        <input type="text" id="used-model" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500" placeholder="مثال: Samsung Galaxy A52">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">اسم البائع / المشتري</label>
+                        <input type="text" id="used-client" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500" placeholder="اسم صاحب الجهاز">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">سعر الشراء (من العميل) *</label>
+                        <input type="number" id="used-cost" required min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">سعر البيع المتوقع / للزبون *</label>
+                        <input type="number" id="used-sellprice" required min="0" step="0.5" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">الحالة / المواصفات</label>
+                        <input type="text" id="used-condition" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500" placeholder="مثال: بحالة الزيروو 128 جيجا">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">حالة البيع</label>
+                        <select id="used-status" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                            <option value="متاح بالمحل">متاح بالمحل للبيع</option>
+                            <option value="تم البيع">تم البيع بنجاح</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeUsedDeviceModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold transition-all">إلغاء</button>
+                    <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-semibold shadow-lg transition-all">حفظ البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-6 left-6 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-msg" class="text-sm font-semibold">تمت العملية بنجاح</span>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // --- STORAGE & INITIAL DATA ---
+        let appData = {
+            repairs: JSON.parse(localStorage.getItem('irpair_repairs')) || [
+                {
+                    id: '1',
+                    customer: 'محمود حسن',
+                    phone: '01012345678',
+                    model: 'Samsung S21 Ultra',
+                    accessories: 'جراب شفاف',
+                    fault: 'تغيير شاشة أصلية',
+                    partCost: 1800,
+                    price: 2500,
+                    deposit: 500,
+                    dateIn: '2026-06-01',
+                    dateOut: '2026-06-03',
+                    status: 'تم التسليم'
+                },
+                {
+                    id: '2',
+                    customer: 'أحمد سعيد',
+                    phone: '01098765432',
+                    model: 'iPhone 13',
+                    accessories: 'بدون',
+                    fault: 'مشكلة في الشحن والبطارية',
+                    partCost: 400,
+                    price: 900,
+                    deposit: 200,
+                    dateIn: '2026-06-05',
+                    dateOut: '',
+                    status: 'تحت الصيانة'
+                }
+            ],
+            accessories: JSON.parse(localStorage.getItem('irpair_accessories')) || [
+                { id: '1', name: 'شاحن آيفون سريع 20W أصلي', cost: 120, price: 220, qty: 15 },
+                { id: '2', name: 'سماعة بلوتوث لاسلكية TWS', cost: 180, price: 320, qty: 8 },
+                { id: '3', name: 'سلك شاحن Type-C قماشي', cost: 35, price: 75, qty: 25 }
+            ],
+            usedDevices: JSON.parse(localStorage.getItem('irpair_used')) || [
+                { id: '1', model: 'Oppo Reno 5', client: 'إبراهيم علي', cost: 2800, sellPrice: 3600, condition: 'مستعمل بحالة ممتازة', status: 'متاح بالمحل' },
+                { id: '2', model: 'iPhone X 64GB', client: 'مح محل', cost: 3500, sellPrice: 4500, condition: 'تغيير بطارية فقط', status: 'تم البيع' }
+            ],
+            accessorySalesLogs: JSON.parse(localStorage.getItem('irpair_acc_sales')) || []
+        };
+
+        function saveData() {
+            localStorage.setItem('irpair_repairs', JSON.stringify(appData.repairs));
+            localStorage.setItem('irpair_accessories', JSON.stringify(appData.accessories));
+            localStorage.setItem('irpair_used', JSON.stringify(appData.usedDevices));
+            localStorage.setItem('irpair_acc_sales', JSON.stringify(appData.accessorySalesLogs));
+            updateDashboard();
+        }
+
+        // --- NAVIGATION TABS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                btn.classList.add('text-slate-300', 'hover:text-white', 'hover:bg-slate-800');
+            });
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+            activeBtn.classList.remove('text-slate-300', 'hover:text-white', 'hover:bg-slate-800');
+
+            if (tabId === 'dashboard') updateDashboard();
+            if (tabId === 'repairs') renderRepairsTable();
+            if (tabId === 'accessories') renderAccessories();
+            if (tabId === 'useddevices') renderUsedDevices();
+        }
+
+        // --- NOTIFICATION TOAST ---
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = msg;
+            if (isError) {
+                iconEl.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-lg';
+            } else {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- DASHBOARD LOGIC & CALCULATIONS ---
+        function updateDashboard() {
+            let todayStr = new Date().toISOString().split('T')[0];
+            let now = new Date();
+            let sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            let currentMonth = now.getMonth();
+            let currentYear = now.getFullYear();
+
+            let dailyProfit = 0;
+            let weeklyProfit = 0;
+            let monthlyProfit = 0;
+            let activeRepairsCount = 0;
+            let totalGeneralRevenue = 0;
+
+            // 1. Calculate from Repairs (Profit = price - partCost) when delivered or repaired
+            appData.repairs.forEach(rep => {
+                let profit = Number(rep.price) - Number(rep.partCost);
+                totalGeneralRevenue += Number(rep.price);
+
+                if (rep.status === 'تحت الصيانة') {
+                    activeRepairsCount++;
+                }
+
+                if (rep.dateIn) {
+                    let repDate = new Date(rep.dateIn);
+                    if (rep.dateIn === todayStr) {
+                        dailyProfit += profit;
+                    }
+                    if (repDate >= sevenDaysAgo) {
+                        weeklyProfit += profit;
+                    }
+                    if (repDate.getMonth() === currentMonth && repDate.getFullYear() === currentYear) {
+                        monthlyProfit += profit;
+                    }
+                }
+            });
+
+            // 2. Add Accessory sales profit if any logs or generic estimation
+            appData.accessorySalesLogs.forEach(sale => {
+                let pDate = new Date(sale.date);
+                let profit = Number(sale.profit);
+                totalGeneralRevenue += Number(sale.total);
+
+                if (sale.date === todayStr) dailyProfit += profit;
+                if (pDate >= sevenDaysAgo) weeklyProfit += profit;
+                if (pDate.getMonth() === currentMonth && pDate.getFullYear() === currentYear) monthlyProfit += profit;
+            });
+
+            // 3. Add Used devices sold profit
+            appData.usedDevices.forEach(dev => {
+                if (dev.status === 'تم البيع') {
+                    let devProfit = Number(dev.sellPrice) - Number(dev.cost);
+                    totalGeneralRevenue += Number(dev.sellPrice);
+                    weeklyProfit += devProfit;
+                    monthlyProfit += devProfit;
+                    dailyProfit += devProfit; // Simplified if sold today
+                }
+            });
+
+            // Render stats
+            document.getElementById('stat-daily-profit').innerHTML = `${dailyProfit.toLocaleString()} <span class="text-sm font-normal text-slate-400">ج.م</span>`;
+            document.getElementById('stat-weekly-profit').innerHTML = `${weeklyProfit.toLocaleString()} <span class="text-sm font-normal text-slate-400">ج.م</span>`;
+            document.getElementById('stat-monthly-profit').innerHTML = `${monthlyProfit.toLocaleString()} <span class="text-sm font-normal text-slate-400">ج.م</span>`;
+            document.getElementById('stat-active-repairs').innerHTML = `${activeRepairsCount} <span class="text-sm font-normal text-slate-400">جهاز</span>`;
+
+            document.getElementById('dash-acc-count').textContent = appData.accessories.reduce((sum, item) => sum + Number(item.qty), 0);
+            document.getElementById('dash-used-count').textContent = appData.usedDevices.filter(d => d.status === 'متاح بالمحل').length;
+            document.getElementById('dash-total-revenue').textContent = `${totalGeneralRevenue.toLocaleString()} ج.م`;
+
+            // Render Recent Repairs on Dashboard
+            let recentContainer = document.getElementById('dashboard-recent-repairs');
+            recentContainer.innerHTML = '';
+            let sortedRepairs = [...appData.repairs].reverse().slice(0, 4);
+            if (sortedRepairs.length === 0) {
+                recentContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">لا توجد عمليات صيانة مسجلة حتى الآن.</p>';
+            } else {
+                sortedRepairs.forEach(rep => {
+                    let profit = Number(rep.price) - Number(rep.partCost);
+                    let badgeColor = rep.status === 'تم التسليم' ? 'bg-emerald-500/20 text-emerald-400' : (rep.status === 'تم الإصلاح' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400');
+                    recentContainer.innerHTML += `
+                        <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-sm text-white">${rep.model} <span class="text-xs text-slate-400 font-normal">(${rep.customer})</span></h4>
+                                <p class="text-xs text-slate-400 mt-0.5">العطل: ${rep.fault}</p>
+                            </div>
+                            <div class="text-left">
+                                <span class="text-xs px-2.5 py-1 rounded-full font-bold ${badgeColor}">${rep.status}</span>
+                                <p class="text-xs text-emerald-400 font-semibold mt-1">ربح: ${profit} ج.م</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // --- REPAIRS MANAGEMENT ---
+        function renderRepairsTable() {
+            const tbody = document.getElementById('repairs-table-body');
+            const emptyEl = document.getElementById('repairs-empty');
+            const searchVal = document.getElementById('repair-search').value.toLowerCase();
+            const statusFilter = document.getElementById('repair-filter-status').value;
+
+            tbody.innerHTML = '';
+            let filtered = appData.repairs.filter(rep => {
+                let matchesSearch = rep.customer.toLowerCase().includes(searchVal) || rep.model.toLowerCase().includes(searchVal) || rep.phone.includes(searchVal);
+                let matchesStatus = (statusFilter === 'all' || rep.status === statusFilter);
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            } else {
+                emptyEl.classList.add('hidden');
+            }
+
+            filtered.slice().reverse().forEach(rep => {
+                let netProfit = Number(rep.price) - Number(rep.partCost);
+                let badgeColor = 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                if (rep.status === 'تم الإصلاح') badgeColor = 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                if (rep.status === 'تم التسليم') badgeColor = 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                if (rep.status === 'ملغي/لم يتم الإصلاح') badgeColor = 'bg-rose-500/20 text-rose-400 border border-rose-500/30';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/60">
+                        <td class="p-4">
+                            <div class="font-bold text-white">${rep.customer}</div>
+                            <div class="text-xs text-slate-400 mt-0.5"><a href="tel:${rep.phone}" class="hover:text-blue-400"><i class="fa-solid fa-phone-alt ml-1"></i>${rep.phone}</a></div>
+                        </td>
+                        <td class="p-4">
+                            <div class="font-semibold text-blue-300">${rep.model}</div>
+                            <div class="text-xs text-slate-300 mt-0.5">العطل: ${rep.fault}</div>
+                            ${rep.accessories ? `<div class="text-xs text-amber-400/90 mt-1"><i class="fa-solid fa-box ml-1"></i>الملحقات: ${rep.accessories}</div>` : ''}
+                        </td>
+                        <td class="p-4 text-xs">
+                            <div class="text-slate-300"><i class="fa-solid fa-arrow-down text-emerald-400 ml-1"></i>استلام: ${rep.dateIn}</div>
+                            <div class="text-slate-400 mt-1"><i class="fa-solid fa-arrow-up text-blue-400 ml-1"></i>تسليم: ${rep.dateOut || 'لم يتم بعد'}</div>
+                        </td>
+                        <td class="p-4 text-xs">
+                            <div class="text-slate-300">السعر: <strong class="text-white">${rep.price} ج.م</strong></div>
+                            <div class="text-slate-400 mt-0.5">قطعة الغيار: ${rep.partCost} ج.م</div>
+                            <div class="text-slate-400 mt-0.5">العربون: ${rep.deposit} ج.م</div>
+                            <div class="text-emerald-400 font-bold mt-1">الصافي: ${netProfit} ج.م</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold inline-block ${badgeColor}">${rep.status}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="sendWhatsApp('${rep.id}')" title="إرسال واتساب للعميل" class="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </button>
+                                <button onclick="editRepair('${rep.id}')" title="تعديل" class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteRepair('${rep.id}')" title="حذف" class="w-8 h-8 rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openRepairModal(id = null) {
+            document.getElementById('modal-repair').classList.remove('hidden');
+            if (id) {
+                document.getElementById('repair-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-500"></i> تعديل بيانات الصيانة';
+                let rep = appData.repairs.find(r => r.id === id);
+                document.getElementById('repair-id').value = rep.id;
+                document.getElementById('repair-customer').value = rep.customer;
+                document.getElementById('repair-phone').value = rep.phone;
+                document.getElementById('repair-model').value = rep.model;
+                document.getElementById('repair-accessories').value = rep.accessories;
+                document.getElementById('repair-fault').value = rep.fault;
+                document.getElementById('repair-partcost').value = rep.partCost;
+                document.getElementById('repair-price').value = rep.price;
+                document.getElementById('repair-deposit').value = rep.deposit;
+                document.getElementById('repair-date-in').value = rep.dateIn;
+                document.getElementById('repair-date-out').value = rep.dateOut;
+                document.getElementById('repair-status').value = rep.status;
+            } else {
+                document.getElementById('repair-modal-title').innerHTML = '<i class="fa-solid fa-laptop-code text-blue-500"></i> إضافة جهاز جديد للصيانة';
+                document.getElementById('form-repair').reset();
+                document.getElementById('repair-id').value = '';
+                document.getElementById('repair-date-in').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function closeRepairModal() {
+            document.getElementById('modal-repair').classList.add('hidden');
+        }
+
+        function saveRepair(e) {
+            e.preventDefault();
+            let id = document.getElementById('repair-id').value;
+            let repairObj = {
+                id: id ? id : Date.now().toString(),
+                customer: document.getElementById('repair-customer').value,
+                phone: document.getElementById('repair-phone').value,
+                model: document.getElementById('repair-model').value,
+                accessories: document.getElementById('repair-accessories').value,
+                fault: document.getElementById('repair-fault').value,
+                partCost: Number(document.getElementById('repair-partcost').value),
+                price: Number(document.getElementById('repair-price').value),
+                deposit: Number(document.getElementById('repair-deposit').value),
+                dateIn: document.getElementById('repair-date-in').value,
+                dateOut: document.getElementById('repair-date-out').value,
+                status: document.getElementById('repair-status').value
+            };
+
+            if (id) {
+                let idx = appData.repairs.findIndex(r => r.id === id);
+                if (idx !== -1) appData.repairs[idx] = repairObj;
+                showToast('تم تحديث بيانات الصيانة بنجاح');
+            } else {
+                appData.repairs.push(repairObj);
+                showToast('تمت إضافة الجهاز للصيانة بنجاح');
+            }
+
+            saveData();
+            closeRepairModal();
+            renderRepairsTable();
+        }
+
+        function editRepair(id) {
+            openRepairModal(id);
+        }
+
+        function deleteRepair(id) {
+            if (confirm('هل أنت متأكد من حذف هذا السجل نهائياً؟')) {
+                appData.repairs = appData.repairs.filter(r => r.id !== id);
+                saveData();
+                renderRepairsTable();
+                showToast('تم حذف السجل بنجاح');
+            }
+        }
+
+        // --- WHATSAPP MESSAGE GENERATOR ---
+        function sendWhatsApp(id) {
+            let rep = appData.repairs.find(r => r.id === id);
+            if (!rep) return;
+
+            let netPrice = Number(rep.price) - Number(rep.deposit);
+            let message = `مرحباً أستاذ *${rep.customer}* 🌟\n\n` +
+                          `تواصل معك محل *IRpair* لصيانة الموبايلات 📱\n` +
+                          `تفاصيل جهازك: *${rep.model}*\n` +
+                          `العطل: ${rep.fault}\n` +
+                          `حالة الجهاز الحالية: *${rep.status}*\n\n` +
+                          `💰 الإجمالي: ${rep.price} ج.م\n` +
+                          `💵 المدفوع مقدماً (عربون): ${rep.deposit} ج.م\n` +
+                          `📌 المتبقي للدفع: *${netPrice > 0 ? netPrice : 0} ج.م*\n\n` +
+                          `شكراً لثقتكم بنا! للإستفسار: 01001220551 (مهندس/ هشام عيد)`;
+
+            let cleanPhone = rep.phone.replace(/\D/g, '');
+            if (cleanPhone.startsWith('0')) {
+                cleanPhone = '2' + cleanPhone; // Egypt country code formatting if needed or standard
+            }
+            let waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // --- ACCESSORIES MANAGEMENT ---
+        function renderAccessories() {
+            const grid = document.getElementById('accessories-grid');
+            const emptyEl = document.getElementById('accessories-empty');
+            const searchVal = document.getElementById('acc-search').value.toLowerCase();
+
+            grid.innerHTML = '';
+            let filtered = appData.accessories.filter(a => a.name.toLowerCase().includes(searchVal));
+
+            if (filtered.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            } else {
+                emptyEl.classList.add('hidden');
+            }
+
+            filtered.forEach(acc => {
+                let profit = Number(acc.price) - Number(acc.cost);
+                grid.innerHTML += `
+                    <div class="bg-cardBg border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between hover:border-slate-700 transition-all">
+                        <div>
+                            <div class="flex justify-between items-start gap-2 mb-2">
+                                <h4 class="font-bold text-white text-base">${acc.name}</h4>
+                                <span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-bold">المخزون: ${acc.qty}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 my-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs">
+                                <div><span class="text-slate-400">شراء:</span> <strong class="text-white">${acc.cost} ج.م</strong></div>
+                                <div><span class="text-slate-400">بيع:</span> <strong class="text-emerald-400">${acc.price} ج.م</strong></div>
+                                <div class="col-span-2 pt-1 border-t border-slate-800 mt-1"><span class="text-slate-400">ربح القطعة:</span> <strong class="text-blue-400">${profit} ج.م</strong></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 pt-3 border-t border-slate-800">
+                            <button onclick="sellAccessory('${acc.id}')" class="flex-grow bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-xl text-xs shadow transition-all flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-cart-shopping"></i> بيع قطعة
+                            </button>
+                            <button onclick="editAccessory('${acc.id}')" class="w-9 h-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl flex items-center justify-center text-xs transition-all">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteAccessory('${acc.id}')" class="w-9 h-9 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl flex items-center justify-center text-xs transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openAccessoryModal(id = null) {
+            document.getElementById('modal-accessory').classList.remove('hidden');
+            if (id) {
+                document.getElementById('acc-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-500"></i> تعديل بيانات الإكسسوار';
+                let acc = appData.accessories.find(a => a.id === id);
+                document.getElementById('acc-id').value = acc.id;
+                document.getElementById('acc-name').value = acc.name;
+                document.getElementById('acc-cost').value = acc.cost;
+                document.getElementById('acc-price').value = acc.price;
+                document.getElementById('acc-qty').value = acc.qty;
+            } else {
+                document.getElementById('acc-modal-title').innerHTML = '<i class="fa-solid fa-headphones text-emerald-500"></i> إضافة إكسسوار جديد';
+                document.getElementById('form-accessory').reset();
+                document.getElementById('acc-id').value = '';
+            }
+        }
+
+        function closeAccessoryModal() {
+            document.getElementById('modal-accessory').classList.add('hidden');
+        }
+
+        function saveAccessory(e) {
+            e.preventDefault();
+            let id = document.getElementById('acc-id').value;
+            let accObj = {
+                id: id ? id : Date.now().toString(),
+                name: document.getElementById('acc-name').value,
+                cost: Number(document.getElementById('acc-cost').value),
+                price: Number(document.getElementById('acc-price').value),
+                qty: Number(document.getElementById('acc-qty').value)
+            };
+
+            if (id) {
+                let idx = appData.accessories.findIndex(a => a.id === id);
+                if (idx !== -1) appData.accessories[idx] = accObj;
+                showToast('تم تحديث الإكسسوار بنجاح');
+            } else {
+                appData.accessories.push(accObj);
+                showToast('تمت إضافة الإكسسوار للمخزن');
+            }
+
+            saveData();
+            closeAccessoryModal();
+            renderAccessories();
+        }
+
+        function editAccessory(id) {
+            openAccessoryModal(id);
+        }
+
+        function sellAccessory(id) {
+            let acc = appData.accessories.find(a => a.id === id);
+            if (!acc || acc.qty <= 0) {
+                showToast('الكمية نفذت من المخزن!', true);
+                return;
+            }
+
+            acc.qty -= 1;
+            let profit = Number(acc.price) - Number(acc.cost);
+
+            // Log sale for profit calculation
+            appData.accessorySalesLogs.push({
+                id: Date.now().toString(),
+                name: acc.name,
+                total: acc.price,
+                profit: profit,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            saveData();
+            renderAccessories();
+            showToast(`تم بيع "${acc.name}" بنجاح وتسجيل الربح (${profit} ج.م)`);
+        }
+
+        function deleteAccessory(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                appData.accessories = appData.accessories.filter(a => a.id !== id);
+                saveData();
+                renderAccessories();
+                showToast('تم حذف المنتج بنجاح');
+            }
+        }
+
+        // --- USED DEVICES MANAGEMENT ---
+        function renderUsedDevices() {
+            const grid = document.getElementById('used-grid');
+            const emptyEl = document.getElementById('used-empty');
+            const searchVal = document.getElementById('used-search').value.toLowerCase();
+
+            grid.innerHTML = '';
+            let filtered = appData.usedDevices.filter(d => d.model.toLowerCase().includes(searchVal) || d.client.toLowerCase().includes(searchVal));
+
+            if (filtered.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            } else {
+                emptyEl.classList.add('hidden');
+            }
+
+            filtered.forEach(dev => {
+                let profit = Number(dev.sellPrice) - Number(dev.cost);
+                let badgeColor = dev.status === 'تم البيع' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
+
+                grid.innerHTML += `
+                    <div class="bg-cardBg border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between hover:border-slate-700 transition-all">
+                        <div>
+                            <div class="flex justify-between items-start gap-2 mb-2">
+                                <h4 class="font-bold text-white text-base">${dev.model}</h4>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${dev.status}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mb-3"><i class="fa-solid fa-user ml-1"></i>العميل/البائع: ${dev.client || 'غير محدد'}</p>
+                            <p class="text-xs text-slate-300 mb-3 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">الحالة: ${dev.condition || 'بدون تفاصيل'}</p>
+                            
+                            <div class="grid grid-cols-2 gap-2 my-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs">
+                                <div><span class="text-slate-400">شراء:</span> <strong class="text-white">${dev.cost} ج.م</strong></div>
+                                <div><span class="text-slate-400">بيع:</span> <strong class="text-purple-400">${dev.sellPrice} ج.م</strong></div>
+                                <div class="col-span-2 pt-1 border-t border-slate-800 mt-1"><span class="text-slate-400">الربح المتوقع:</span> <strong class="text-emerald-400">${profit} ج.م</strong></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+                            ${dev.status === 'متاح بالمحل' ? `
+                                <button onclick="markUsedSold('${dev.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-check"></i> تسجيل تم البيع
+                                </button>
+                            ` : '<span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check ml-1"></i>تمت صفقة البيع</span>'}
+                            
+                            <div class="flex items-center gap-1">
+                                <button onclick="editUsedDevice('${dev.id}')" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl flex items-center justify-center text-xs transition-all">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteUsedDevice('${dev.id}')" class="w-8 h-8 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl flex items-center justify-center text-xs transition-all">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openUsedDeviceModal(id = null) {
+            document.getElementById('modal-used').classList.remove('hidden');
+            if (id) {
+                document.getElementById('used-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-purple-500"></i> تعديل بيانات الجهاز المستعمل';
+                let dev = appData.usedDevices.find(d => d.id === id);
+                document.getElementById('used-id').value = dev.id;
+                document.getElementById('used-model').value = dev.model;
+                document.getElementById('used-client').value = dev.client;
+                document.getElementById('used-cost').value = dev.cost;
+                document.getElementById('used-sellprice').value = dev.sellPrice;
+                document.getElementById('used-condition').value = dev.condition;
+                document.getElementById('used-status').value = dev.status;
+            } else {
+                document.getElementById('used-modal-title').innerHTML = '<i class="fa-solid fa-mobile-screen-button text-purple-500"></i> تسجيل جهاز مستعمل جديد';
+                document.getElementById('form-used').reset();
+                document.getElementById('used-id').value = '';
+            }
+        }
+
+        function closeUsedDeviceModal() {
+            document.getElementById('modal-used').classList.add('hidden');
+        }
+
+        function saveUsedDevice(e) {
+            e.preventDefault();
+            let id = document.getElementById('used-id').value;
+            let usedObj = {
+                id: id ? id : Date.now().toString(),
+                model: document.getElementById('used-model').value,
+                client: document.getElementById('used-client').value,
+                cost: Number(document.getElementById('used-cost').value),
+                sellPrice: Number(document.getElementById('used-sellprice').value),
+                condition: document.getElementById('used-condition').value,
+                status: document.getElementById('used-status').value
+            };
+
+            if (id) {
+                let idx = appData.usedDevices.findIndex(d => d.id === id);
+                if (idx !== -1) appData.usedDevices[idx] = usedObj;
+                showToast('تم تحديث بيانات الجهاز المستعمل بنجاح');
+            } else {
+                appData.usedDevices.push(usedObj);
+                showToast('تم تسجيل الجهاز المستعمل بنجاح');
+            }
+
+            saveData();
+            closeUsedDeviceModal();
+            renderUsedDevices();
+        }
+
+        function editUsedDevice(id) {
+            openUsedDeviceModal(id);
+        }
+
+        function markUsedSold(id) {
+            let dev = appData.usedDevices.find(d => d.id === id);
+            if (dev) {
+                dev.status = 'تم البيع';
+                saveData();
+                renderUsedDevices();
+                let profit = Number(dev.sellPrice) - Number(dev.cost);
+                showToast(`تم بيع الجهاز بنجاح وإضافة الربح (${profit} ج.م) للأرباح`);
+            }
+        }
+
+        function deleteUsedDevice(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الجهاز؟')) {
+                appData.usedDevices = appData.usedDevices.filter(d => d.id !== id);
+                saveData();
+                renderUsedDevices();
+                showToast('تم حذف الجهاز بنجاح');
+            }
+        }
+
+        // --- INITIALIZATION ON LOAD ---
+        window.onload = function() {
+            updateDashboard();
+        };
+    </script>
+</body>
+</html>
+```
